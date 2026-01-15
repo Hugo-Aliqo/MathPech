@@ -1,0 +1,7 @@
+{
+  "name": "MathPech",
+  "description": "Une plateforme d'apprentissage des mathématiques personnalisée pour les élèves de la 6ème à la Terminale, avec tuteur IA et scanner de problèmes.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
