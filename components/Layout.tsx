@@ -7,16 +7,18 @@ import { Level } from '../types';
 interface LayoutProps {
   children: React.ReactNode;
   userLevel: Level;
+  lessonProgress?: number;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, userLevel }) => {
+const Layout: React.FC<LayoutProps> = ({ children, userLevel, lessonProgress = 0 }) => {
   const location = useLocation();
   
   // Theme logic: Lycée (2nde to Terminale) is more "sober", College is more "playful"
   const isLycee = ['2nde', '1ere', 'Terminale'].includes(userLevel);
   const themeClass = isLycee ? 'bg-indigo-900' : 'bg-orange-500';
   const accentClass = isLycee ? 'text-indigo-600' : 'text-orange-600';
-  
+  const progressBarColor = isLycee ? 'bg-indigo-600' : 'bg-orange-500';
+
   const navItems = [
     { icon: <Home size={20} />, label: 'Accueil', path: '/' },
     { icon: <BookOpen size={20} />, label: 'Cours', path: '/courses' },
@@ -25,6 +27,8 @@ const Layout: React.FC<LayoutProps> = ({ children, userLevel }) => {
     { icon: <Trophy size={20} />, label: 'Défis', path: '/challenges' },
     { icon: <User size={20} />, label: 'Profil', path: '/profile' },
   ];
+
+  const isAtLesson = location.pathname.startsWith('/lesson/');
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50">
@@ -78,19 +82,31 @@ const Layout: React.FC<LayoutProps> = ({ children, userLevel }) => {
       </main>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-3 z-50">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex flex-col items-center gap-1 transition-all ${
-              location.pathname === item.path ? accentClass : 'text-slate-400'
-            }`}
-          >
-            {item.icon}
-            <span className="text-[10px] font-medium">{item.label}</span>
-          </Link>
-        ))}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex flex-col z-50">
+        {/* Lesson Progress Indicator */}
+        {isAtLesson && (
+          <div className="w-full h-[3px] bg-slate-100 overflow-hidden">
+            <div 
+              className={`h-full ${progressBarColor} transition-all duration-300 ease-out`}
+              style={{ width: `${lessonProgress}%` }}
+            ></div>
+          </div>
+        )}
+        
+        <div className="flex justify-around p-3">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex flex-col items-center gap-1 transition-all ${
+                location.pathname === item.path ? accentClass : 'text-slate-400'
+              }`}
+            >
+              {item.icon}
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </Link>
+          ))}
+        </div>
       </nav>
     </div>
   );

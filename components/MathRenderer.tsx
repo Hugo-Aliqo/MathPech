@@ -12,45 +12,62 @@ const MathRenderer: React.FC<MathRendererProps> = ({ content = "", className, bl
 
   useEffect(() => {
     const el = containerRef.current;
-    if (el && content) {
-      const renderMath = () => {
-        try {
-          if (content.includes('$')) {
-            // Rendu mixte texte et LaTeX
-            let html = content;
-            
-            // Rendu des blocs $$...$$
-            html = html.replace(/\$\$(.*?)\$\$/gs, (_, tex) => 
-              katex.renderToString(tex, { displayMode: true, throwOnError: false })
-            );
-            
-            // Rendu de l'inline $...$
-            html = html.replace(/\$(.*?)\$/g, (_, tex) => 
-              katex.renderToString(tex, { displayMode: false, throwOnError: false })
-            );
-            
-            el.innerHTML = html.replace(/\n/g, '<br/>');
-          } else {
-            // Rendu pur LaTeX
-            katex.render(content, el, {
-              displayMode: block,
-              throwOnError: false,
-              trust: true,
-              strict: false
-            });
-          }
-        } catch (err) {
-          console.error("KaTeX rendering error:", err);
-          el.textContent = content;
-        }
-      };
-      renderMath();
-    } else if (el) {
+    if (!el) return;
+
+    if (!content) {
       el.innerHTML = "";
+      return;
+    }
+
+    try {
+      if (content.includes('$')) {
+        // Rendu intelligent du texte mixte (Markdown-like avec LaTeX)
+        let safeContent = content
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+
+        // 1. Rendu des blocs $$...$$ (Display mode)
+        safeContent = safeContent.replace(/\$\$(.*?)\$\$/gs, (_, tex) => {
+          try {
+            return katex.renderToString(tex, { displayMode: true, throwOnError: false });
+          } catch (e) {
+            return tex;
+          }
+        });
+
+        // 2. Rendu de l'inline $...$ (Inline mode)
+        safeContent = safeContent.replace(/\$(.*?)\$/g, (_, tex) => {
+          try {
+            return katex.renderToString(tex, { displayMode: false, throwOnError: false });
+          } catch (e) {
+            return tex;
+          }
+        });
+
+        // 3. Gestion des retours à la ligne simples
+        el.innerHTML = safeContent.replace(/\n/g, '<br/>');
+      } else {
+        // Rendu pur LaTeX si aucun délimiteur $ n'est présent
+        katex.render(content, el, {
+          displayMode: block,
+          throwOnError: false,
+          trust: true,
+          strict: false
+        });
+      }
+    } catch (err) {
+      console.error("KaTeX error:", err);
+      el.textContent = content;
     }
   }, [content, block]);
 
-  return <div ref={containerRef} className={`${className} math-container`} />;
+  return (
+    <div 
+      ref={containerRef} 
+      className={`${className || ''} math-container overflow-x-auto`} 
+    />
+  );
 };
 
 export default MathRenderer;

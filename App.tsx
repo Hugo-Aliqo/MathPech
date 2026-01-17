@@ -19,6 +19,8 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : null;
   });
 
+  const [activeLessonProgress, setActiveLessonProgress] = useState(0);
+
   useEffect(() => {
     if (profile) {
       localStorage.setItem('mathpech_profile', JSON.stringify(profile));
@@ -94,11 +96,14 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <Layout userLevel={profile.level}>
+      <Layout userLevel={profile.level} lessonProgress={activeLessonProgress}>
         <Routes>
           <Route path="/" element={<Dashboard profile={profile} />} />
           <Route path="/courses" element={<Courses userLevel={profile.level} />} />
-          <Route path="/lesson/:id" element={<LessonDetail />} />
+          <Route 
+            path="/lesson/:id" 
+            element={<LessonDetail onProgressUpdate={setActiveLessonProgress} />} 
+          />
           <Route path="/exercise/:lessonId" element={<ExerciseSession onComplete={(xp) => addXP(xp)} userLevel={profile.level} />} />
           <Route path="/simulations" element={<Simulations />} />
           <Route path="/ai-lab" element={<AILab userLevel={profile.level} />} />
