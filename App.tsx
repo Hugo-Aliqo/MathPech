@@ -25,12 +25,46 @@ const App: React.FC = () => {
     }
   }, [profile]);
 
+  // Streak logic on mount
+  useEffect(() => {
+    if (profile) {
+      const today = new Date().toDateString();
+      const lastActive = profile.lastActiveDate ? new Date(profile.lastActiveDate).toDateString() : null;
+
+      if (lastActive !== today) {
+        let newStreak = profile.streak;
+        
+        if (lastActive) {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const yesterdayString = yesterday.toDateString();
+
+          if (lastActive === yesterdayString) {
+            newStreak += 1;
+          } else {
+            newStreak = 1; // Reset streak if missed a day
+          }
+        } else {
+          newStreak = 1;
+        }
+
+        setProfile(prev => prev ? ({
+          ...prev,
+          streak: newStreak,
+          lastActiveDate: new Date().toISOString()
+        }) : null);
+      }
+    }
+  }, []);
+
   const handleLogin = (email: string, level: Level) => {
     setProfile({
       email,
       name: email.split('@')[0],
       level,
       xp: 0,
+      streak: 1,
+      lastActiveDate: new Date().toISOString(),
       badges: ['Bienvenue'],
       strengths: {
         'Algèbre': 50,

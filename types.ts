@@ -6,6 +6,8 @@ export interface UserProfile {
   name: string;
   level: Level;
   xp: number;
+  streak: number;
+  lastActiveDate?: string;
   badges: string[];
   strengths: Record<string, number>; // 0 to 100
 }

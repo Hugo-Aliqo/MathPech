@@ -34,7 +34,7 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
         <div className="flex gap-3">
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-2">
             <Flame className="text-orange-500 fill-orange-500" size={20} />
-            <span className="font-bold">7 Jours</span>
+            <span className="font-bold">{profile.streak} {profile.streak > 1 ? 'Jours' : 'Jour'}</span>
           </div>
           <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-2">
             <Award className="text-yellow-500" size={20} />
