@@ -19,7 +19,7 @@ const MathRenderer: React.FC<MathRendererProps> = ({ content = "", className, bl
       return;
     }
 
-    // Helper pour générer le HTML d'erreur de manière sécurisée
+    // Helper pour générer le HTML d'erreur de manière sécurisée et uniforme
     const renderError = (tex: string, error: unknown) => {
       const errorMessage = error instanceof Error ? error.message : String(error);
       const safeTex = tex
@@ -27,21 +27,23 @@ const MathRenderer: React.FC<MathRendererProps> = ({ content = "", className, bl
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
       
-      return `<span class="math-error" title="${errorMessage.replace(/"/g, '&quot;')}">Erreur: ${safeTex}</span>`;
+      // On affiche "Erreur LaTeX" et le code fautif dans une balise stylisée
+      return `<span class="math-error" title="${errorMessage.replace(/"/g, '&quot;')}">⚠️ Erreur LaTeX: ${safeTex}</span>`;
     };
 
     try {
-      // Si le contenu contient des délimiteurs LaTeX, on le parse intelligemment
+      // Détection des délimiteurs LaTeX pour le mode mixte (texte + maths)
+      // On supporte $$...$$ (bloc) et $...$ (inline)
       if (content.includes('$')) {
-        // Regex pour séparer : 
-        // 1. $$...$$ (Display Math) - [\s\S] permet de capturer les retours à la ligne
-        // 2. $...$ (Inline Math)
-        const parts = content.split(/(\$\$[\s\S]*?\$\$)|(\$[\s\S]*?\$)/g).filter(part => part !== undefined);
+        // Cette regex sépare le contenu en segments de texte et de maths
+        // Les groupes de capture () font que le séparateur est inclus dans le résultat du split
+        const regex = /(\$\$[\s\S]*?\$\$)|(\$[\s\S]*?\$)/g;
+        const parts = content.split(regex);
 
         let finalHtml = "";
 
-        for (const part of parts) {
-          if (!part) continue;
+        parts.forEach(part => {
+          if (part === undefined) return; // Skip undefined parts from regex groups
 
           if (part.startsWith('$$') && part.endsWith('$$') && part.length >= 4) {
             // Mode Bloc
@@ -68,48 +70,48 @@ const MathRenderer: React.FC<MathRendererProps> = ({ content = "", className, bl
               finalHtml += renderError(tex, e);
             }
           } else {
-            // Texte brut : On échappe le HTML et on gère les retours à la ligne
+            // Texte brut : échappement HTML basique et gestion des sauts de ligne
             finalHtml += part
               .replace(/&/g, "&amp;")
               .replace(/</g, "&lt;")
               .replace(/>/g, "&gt;")
               .replace(/\n/g, '<br/>');
           }
-        }
+        });
+        
         el.innerHTML = finalHtml;
       } else {
-        // Fallback pour le contenu purement LaTeX (ex: solutions sans $)
-        // On essaie de le rendre comme une formule mathématique
+        // Fallback: Pas de délimiteurs '$', on essaie de rendre tout le contenu comme du LaTeX ou du texte
         try {
           katex.render(content, el, {
             displayMode: block,
-            throwOnError: true,
+            throwOnError: true, // Important pour attraper les erreurs dans le catch
             trust: true,
             strict: false
           });
         } catch (e) {
-           // Si ce n'est pas du LaTeX valide, on l'affiche simplement comme du texte (cas des réponses simples)
-           // Mais si c'est une erreur de syntaxe LaTeX pure, on affiche l'erreur
-           if (content.match(/[\\^_{}]/)) {
+           // Si erreur de parsing LaTeX
+           // Heuristique : si le texte contient des caractères mathématiques typiques, c'est probablement une formule ratée
+           if (/[\\^_{}=]/.test(content)) {
              console.warn("KaTeX Raw Render Error:", e);
              el.innerHTML = renderError(content, e);
            } else {
-             // Probablement juste du texte sans formatage mathématique
+             // Sinon, c'est probablement juste du texte simple qui n'était pas du LaTeX
              el.textContent = content;
            }
         }
       }
     } catch (err) {
       console.error("MathRenderer Fatal Error:", err);
-      el.textContent = "Erreur d'affichage.";
-      el.className = `${className || ''} math-error`;
+      el.innerHTML = renderError(content, err);
     }
   }, [content, block]);
 
   return (
     <div 
       ref={containerRef} 
-      className={`${className || ''} math-container overflow-x-auto`} 
+      className={`math-container w-full overflow-x-auto ${className || ''}`} 
+      style={{ maxWidth: '100%' }} // Force containment pour éviter que les formules larges ne cassent le layout
     />
   );
 };

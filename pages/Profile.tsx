@@ -39,12 +39,16 @@ const Profile: React.FC<ProfileProps> = ({ profile, onLevelChange, onNameChange,
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 <input
                     type="text"
+                    maxLength={25}
                     value={profile.name}
                     onChange={(e) => onNameChange(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                     placeholder="Ton pseudo"
                 />
               </div>
+              <p className="text-[10px] text-slate-400 mt-1 text-right">
+                {profile.name.length}/25
+              </p>
             </div>
 
             <div>
