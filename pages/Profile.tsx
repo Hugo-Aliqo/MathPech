@@ -1,16 +1,16 @@
-
 import React from 'react';
 import { UserProfile, Level } from '../types';
 import { LEVELS } from '../constants';
-import { Settings, LogOut, Bell, ShieldCheck, Mail } from 'lucide-react';
+import { Settings, LogOut, Bell, ShieldCheck, Mail, User } from 'lucide-react';
 
 interface ProfileProps {
   profile: UserProfile;
   onLevelChange: (level: Level) => void;
+  onNameChange: (name: string) => void;
   onLogout: () => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ profile, onLevelChange, onLogout }) => {
+const Profile: React.FC<ProfileProps> = ({ profile, onLevelChange, onNameChange, onLogout }) => {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <header className="flex items-center gap-6">
@@ -27,12 +27,26 @@ const Profile: React.FC<ProfileProps> = ({ profile, onLevelChange, onLogout }) =
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Account Settings */}
-        <section className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6">
+        <section className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-6 h-fit">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <Settings size={22} className="text-slate-400" /> Paramètres du Compte
           </h3>
           
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Pseudo</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                    type="text"
+                    value={profile.name}
+                    onChange={(e) => onNameChange(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                    placeholder="Ton pseudo"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-bold text-slate-700 mb-2">Mon Niveau Actuel</label>
               <select 
@@ -68,6 +82,15 @@ const Profile: React.FC<ProfileProps> = ({ profile, onLevelChange, onLogout }) =
                 </div>
               </button>
             </div>
+            
+            <div className="pt-4 border-t border-slate-100">
+              <button 
+                onClick={onLogout}
+                className="w-full flex items-center justify-center gap-2 py-3 text-red-600 font-bold bg-red-50 rounded-2xl hover:bg-red-100 transition-colors"
+              >
+                <LogOut size={20} /> Déconnexion
+              </button>
+            </div>
           </div>
         </section>
 
@@ -86,13 +109,6 @@ const Profile: React.FC<ProfileProps> = ({ profile, onLevelChange, onLogout }) =
               </div>
             </div>
           </div>
-
-          <button 
-            onClick={onLogout}
-            className="w-full flex items-center justify-center gap-2 py-4 text-red-600 font-bold bg-red-50 rounded-2xl hover:bg-red-100 transition-colors"
-          >
-            <LogOut size={20} /> Déconnexion
-          </button>
         </section>
       </div>
     </div>

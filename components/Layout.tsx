@@ -1,16 +1,16 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, BrainCircuit, User, GraduationCap, Trophy, Microscope } from 'lucide-react';
+import { Home, BookOpen, BrainCircuit, User, GraduationCap, Trophy, Microscope, LogOut } from 'lucide-react';
 import { Level } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
   userLevel: Level;
   lessonProgress?: number;
+  onLogout: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, userLevel, lessonProgress = 0 }) => {
+const Layout: React.FC<LayoutProps> = ({ children, userLevel, lessonProgress = 0, onLogout }) => {
   const location = useLocation();
   
   // Theme logic: Lycée (2nde to Terminale) is more "sober", College is more "playful"
@@ -38,8 +38,17 @@ const Layout: React.FC<LayoutProps> = ({ children, userLevel, lessonProgress = 0
             <GraduationCap size={28} />
             <h1 className="text-xl font-poppins font-bold">MathPech</h1>
         </div>
-        <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-          {userLevel}
+        <div className="flex items-center gap-3">
+          <div className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+            {userLevel}
+          </div>
+          <button 
+            onClick={onLogout}
+            className="p-1 bg-white/10 rounded-full hover:bg-white/30 transition-colors"
+            title="Déconnexion"
+          >
+            <LogOut size={16} />
+          </button>
         </div>
       </header>
 
@@ -65,12 +74,22 @@ const Layout: React.FC<LayoutProps> = ({ children, userLevel, lessonProgress = 0
           ))}
         </div>
 
-        <div className="mt-auto p-4 bg-white/10 rounded-2xl">
-          <div className="text-xs opacity-70 mb-1">Progression Semaine</div>
-          <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-white w-3/4"></div>
-          </div>
-          <div className="text-right text-xs mt-1">750 XP</div>
+        <div className="mt-auto pt-4 space-y-4">
+            <button 
+              onClick={onLogout}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/10 text-white/80 hover:text-white transition-all text-sm font-medium"
+            >
+              <LogOut size={20} />
+              <span>Déconnexion</span>
+            </button>
+
+            <div className="p-4 bg-white/10 rounded-2xl">
+              <div className="text-xs opacity-70 mb-1">Progression Semaine</div>
+              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-white w-3/4"></div>
+              </div>
+              <div className="text-right text-xs mt-1">750 XP</div>
+            </div>
         </div>
       </nav>
 

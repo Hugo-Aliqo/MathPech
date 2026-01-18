@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Level, UserProfile } from './types';
@@ -21,9 +20,13 @@ const App: React.FC = () => {
 
   const [activeLessonProgress, setActiveLessonProgress] = useState(0);
 
+  // Sauvegarde à chaque changement du profil
   useEffect(() => {
     if (profile) {
+      // 1. Sauvegarde de la session active
       localStorage.setItem('mathpech_profile', JSON.stringify(profile));
+      // 2. Sauvegarde persistante des données de cet utilisateur spécifique (simulation BDD)
+      localStorage.setItem(`mathpech_user_${profile.email}`, JSON.stringify(profile));
     }
   }, [profile]);
 
@@ -60,25 +63,44 @@ const App: React.FC = () => {
   }, []);
 
   const handleLogin = (email: string, level: Level) => {
-    setProfile({
-      email,
-      name: email.split('@')[0],
-      level,
-      xp: 0,
-      streak: 1,
-      lastActiveDate: new Date().toISOString(),
-      badges: ['Bienvenue'],
-      strengths: {
-        'Algèbre': 50,
-        'Géométrie': 50,
-        'Probabilités': 50,
-        'Statistiques': 50
-      }
-    });
+    // Vérifier si un compte existe déjà pour cet email
+    const existingData = localStorage.getItem(`mathpech_user_${email}`);
+    
+    if (existingData) {
+      // Connexion : on restaure les données
+      const userData = JSON.parse(existingData);
+      // Mise à jour éventuelle du niveau si l'utilisateur l'a changé dans le formulaire de login, 
+      // ou on garde l'ancien. Ici on privilégie la continuité mais on met à jour la date.
+      setProfile({
+        ...userData,
+        lastActiveDate: new Date().toISOString()
+      });
+    } else {
+      // Inscription : création d'un nouveau profil
+      setProfile({
+        email,
+        name: email.split('@')[0],
+        level,
+        xp: 0,
+        streak: 1,
+        lastActiveDate: new Date().toISOString(),
+        badges: ['Bienvenue'],
+        strengths: {
+          'Algèbre': 50,
+          'Géométrie': 50,
+          'Probabilités': 50,
+          'Statistiques': 50
+        }
+      });
+    }
   };
 
   const handleLevelChange = (newLevel: Level) => {
     if (profile) setProfile(prev => prev ? ({ ...prev, level: newLevel }) : null);
+  };
+
+  const handleNameChange = (newName: string) => {
+    if (profile) setProfile(prev => prev ? ({ ...prev, name: newName }) : null);
   };
 
   const addXP = (amount: number) => {
@@ -86,7 +108,7 @@ const App: React.FC = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('mathpech_profile');
+    localStorage.removeItem('mathpech_profile'); // Supprime seulement la session active
     setProfile(null);
   };
 
@@ -96,7 +118,7 @@ const App: React.FC = () => {
 
   return (
     <HashRouter>
-      <Layout userLevel={profile.level} lessonProgress={activeLessonProgress}>
+      <Layout userLevel={profile.level} lessonProgress={activeLessonProgress} onLogout={handleLogout}>
         <Routes>
           <Route path="/" element={<Dashboard profile={profile} />} />
           <Route path="/courses" element={<Courses userLevel={profile.level} />} />
@@ -108,7 +130,7 @@ const App: React.FC = () => {
           <Route path="/simulations" element={<Simulations />} />
           <Route path="/ai-lab" element={<AILab userLevel={profile.level} />} />
           <Route path="/challenges" element={<Challenges profile={profile} />} />
-          <Route path="/profile" element={<Profile profile={profile} onLevelChange={handleLevelChange} onLogout={handleLogout} />} />
+          <Route path="/profile" element={<Profile profile={profile} onLevelChange={handleLevelChange} onNameChange={handleNameChange} onLogout={handleLogout} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

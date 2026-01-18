@@ -46,9 +46,10 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
         {/* Radar Chart Analysis */}
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
           <h3 className="text-lg font-bold mb-6">Tes compétences en {profile.level}</h3>
-          {/* Ajout de w-full et min-w-0 pour assurer que le ResponsiveContainer a une largeur valide dans la Grid */}
-          <div className="h-64 w-full min-w-0">
-            <ResponsiveContainer width="100%" height="100%">
+          {/* Ajout de min-w-0 et relative pour la stabilité du conteneur */}
+          <div className="h-64 w-full min-w-0 relative">
+            {/* Ajout de minWidth={0} et minHeight={0} pour supprimer les avertissements Recharts */}
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                 <PolarGrid stroke="#e2e8f0" />
                 <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 12 }} />
