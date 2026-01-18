@@ -18,5 +18,3 @@ View your app in AI Studio: https://ai.studio/apps/drive/1HQzbKrsa_d5gs_9J9-mi86
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
-
-Avertissement : KaTeX ne fonctionne pas en mode de compatibilité. Assurez-vous que votre site web possède un type de document approprié.

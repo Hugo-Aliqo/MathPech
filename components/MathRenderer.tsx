@@ -19,46 +19,90 @@ const MathRenderer: React.FC<MathRendererProps> = ({ content = "", className, bl
       return;
     }
 
+    // Helper pour générer le HTML d'erreur de manière sécurisée
+    const renderError = (tex: string, error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const safeTex = tex
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      
+      return `<span class="math-error" title="${errorMessage.replace(/"/g, '&quot;')}">Erreur: ${safeTex}</span>`;
+    };
+
     try {
+      // Si le contenu contient des délimiteurs LaTeX, on le parse intelligemment
       if (content.includes('$')) {
-        // Rendu intelligent du texte mixte (Markdown-like avec LaTeX)
-        let safeContent = content
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
+        // Regex pour séparer : 
+        // 1. $$...$$ (Display Math) - [\s\S] permet de capturer les retours à la ligne
+        // 2. $...$ (Inline Math)
+        const parts = content.split(/(\$\$[\s\S]*?\$\$)|(\$[\s\S]*?\$)/g).filter(part => part !== undefined);
 
-        // 1. Rendu des blocs $$...$$ (Display mode)
-        safeContent = safeContent.replace(/\$\$(.*?)\$\$/gs, (_, tex) => {
-          try {
-            return katex.renderToString(tex, { displayMode: true, throwOnError: false });
-          } catch (e) {
-            return tex;
+        let finalHtml = "";
+
+        for (const part of parts) {
+          if (!part) continue;
+
+          if (part.startsWith('$$') && part.endsWith('$$') && part.length >= 4) {
+            // Mode Bloc
+            const tex = part.slice(2, -2);
+            try {
+              finalHtml += katex.renderToString(tex, { 
+                displayMode: true, 
+                throwOnError: true 
+              });
+            } catch (e) {
+              console.warn("KaTeX Display Error:", e);
+              finalHtml += renderError(tex, e);
+            }
+          } else if (part.startsWith('$') && part.endsWith('$') && part.length >= 2) {
+            // Mode Inline
+            const tex = part.slice(1, -1);
+            try {
+              finalHtml += katex.renderToString(tex, { 
+                displayMode: false, 
+                throwOnError: true 
+              });
+            } catch (e) {
+              console.warn("KaTeX Inline Error:", e);
+              finalHtml += renderError(tex, e);
+            }
+          } else {
+            // Texte brut : On échappe le HTML et on gère les retours à la ligne
+            finalHtml += part
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/\n/g, '<br/>');
           }
-        });
-
-        // 2. Rendu de l'inline $...$ (Inline mode)
-        safeContent = safeContent.replace(/\$(.*?)\$/g, (_, tex) => {
-          try {
-            return katex.renderToString(tex, { displayMode: false, throwOnError: false });
-          } catch (e) {
-            return tex;
-          }
-        });
-
-        // 3. Gestion des retours à la ligne simples
-        el.innerHTML = safeContent.replace(/\n/g, '<br/>');
+        }
+        el.innerHTML = finalHtml;
       } else {
-        // Rendu pur LaTeX si aucun délimiteur $ n'est présent
-        katex.render(content, el, {
-          displayMode: block,
-          throwOnError: false,
-          trust: true,
-          strict: false
-        });
+        // Fallback pour le contenu purement LaTeX (ex: solutions sans $)
+        // On essaie de le rendre comme une formule mathématique
+        try {
+          katex.render(content, el, {
+            displayMode: block,
+            throwOnError: true,
+            trust: true,
+            strict: false
+          });
+        } catch (e) {
+           // Si ce n'est pas du LaTeX valide, on l'affiche simplement comme du texte (cas des réponses simples)
+           // Mais si c'est une erreur de syntaxe LaTeX pure, on affiche l'erreur
+           if (content.match(/[\\^_{}]/)) {
+             console.warn("KaTeX Raw Render Error:", e);
+             el.innerHTML = renderError(content, e);
+           } else {
+             // Probablement juste du texte sans formatage mathématique
+             el.textContent = content;
+           }
+        }
       }
     } catch (err) {
-      console.error("KaTeX error:", err);
-      el.textContent = content;
+      console.error("MathRenderer Fatal Error:", err);
+      el.textContent = "Erreur d'affichage.";
+      el.className = `${className || ''} math-error`;
     }
   }, [content, block]);
 

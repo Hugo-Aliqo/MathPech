@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UserProfile } from '../types';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
@@ -47,7 +46,8 @@ const Dashboard: React.FC<DashboardProps> = ({ profile }) => {
         {/* Radar Chart Analysis */}
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
           <h3 className="text-lg font-bold mb-6">Tes compétences en {profile.level}</h3>
-          <div className="h-64">
+          {/* Ajout de w-full et min-w-0 pour assurer que le ResponsiveContainer a une largeur valide dans la Grid */}
+          <div className="h-64 w-full min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
                 <PolarGrid stroke="#e2e8f0" />
